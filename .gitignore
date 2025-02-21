@@ -4,3 +4,5 @@ build/
 *.out
 .vscode/
 .swp
+.build/
+.cache/
