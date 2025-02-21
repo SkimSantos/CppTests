@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Include all header files
 include_directories(${PROJECT_SOURCE_DIR}/include)
+
 # Collect all .cpp files in src/
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
