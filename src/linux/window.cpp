@@ -15,7 +15,7 @@ MyWindow::MyWindow(int width, int height, const std::string& title){
     XStoreName(display, window, title.c_str());
 
     // Select input events (close window, key press, etc.)
-    XSelectInput(display, window, ExposureMask | KeyPressMask | StructureNotifyMask);
+    XSelectInput(display, window, ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask);
     gc = XCreateGC(display, window, 0, NULL);
 
     // Display the window
@@ -43,10 +43,42 @@ void MyWindow::run() {
         if(event.type == KeyPress) {
             std::cout << "Key Pressed : " << event.xkey.keycode << std::endl;
         } else if(event.type == Expose) {
-            drawGraph();
-            loadImage("../images/warning.png");
+            std::cout << "Expose Event" << std::endl;
+        } else if(event.type == KeyRelease) {
+
+        } else if(event.type == ButtonPress) {
+            
+        } else if(event.type == ButtonRelease) {
+            
+        } else if(event.type == MotionNotify) {
+            x_mouse_position = event.xmotion.x;
+            y_mouse_position = event.xmotion.y;
+        } else if(event.type == FocusIn) {
+            focus_on = true;
+        } else if(event.type == FocusOut) {
+            focus_on = false;
         } else if (event.type == DestroyNotify) {
             break;
         }
     }
+}
+
+void MyWindow::changeInputHandle(long inputMask) {
+    XSelectInput(display, window, inputMask);
+}
+
+void MyWindow::changeWindowSize(int width, int height) {
+
+}
+
+void MyWindow::changeColor() {
+    
+}
+
+std::vector<int> MyWindow::getMousePosition() {
+    return {x_mouse_position, y_mouse_position};
+}
+
+bool MyWindow::getIsFocus() {
+    return focus_on;
 }
