@@ -16,6 +16,11 @@ private:
     GC gc;  // Graphics context
     int screen;
 
+    bool created = false;
+
+    void (*keyFuncs[255])(bool) = {nullptr};
+    void (*buttonFuncs[5])(bool) = {nullptr};
+
 public:
     MyWindow(int width, int height, const std::string& title);
     ~MyWindow();
@@ -27,6 +32,12 @@ public:
     void changeInputHandle(long inputMask);
     void changeColor();
     void changeWindowSize(int width, int height);
+
+    void addCallToKey(int keycode, void (*func)(bool));
+    void removeCallFromKey(int keycode, void (*func)(bool));
+
+    void addCallToButton(int button, void (*func)(bool));
+    void removeCallFromButton(int button, void (*func)(bool));
 
     std::vector<int> getMousePosition();
     bool getIsFocus();
