@@ -15,6 +15,7 @@ int main() {
     MyWindow window(1000, 600, "Testing Window");
     window.addCallToKey(38 , testFunction);
     window.addCallToButton(1, testButtonFunction);
+    window.enableInput(true);
     window.run();
     window.removeCallFromKey(38, testFunction);
     window.removeCallFromButton(1, testButtonFunction);

@@ -1,25 +1,79 @@
 #include "linux/window.h"
 #include "linux/image.h"
+#include <X11/Xatom.h>
+#include <X11/extensions/shape.h>
+#include <X11/Xresource.h>
 #include <iostream>
 
+// Helper to find ARGB visual
+Visual* MyWindow::get_argb_visual(Display* dpy, int screen, Colormap* out_colormap) {
+    XVisualInfo vinfo;
+    if (!XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
+        return nullptr;
+    }
+
+    *out_colormap = XCreateColormap(dpy, RootWindow(dpy, screen), vinfo.visual, AllocNone);
+    return vinfo.visual;
+}
+
 MyWindow::MyWindow(int width, int height, const std::string& title){
-    display = XOpenDisplay(NULL);
+    std::cout << "Create window" << std::endl;
+    display = XOpenDisplay(nullptr);
     if(!display) {
         std::cerr << "Cannot Open X Display" << std::endl;
         exit(1);
     }
-
+    
     screen = DefaultScreen(display);
-    window = XCreateSimpleWindow(display, RootWindow(display, screen), 100, 100, width, height, 1, BlackPixel(display, screen), WhitePixel(display, screen));
 
-    XStoreName(display, window, title.c_str());
+    Colormap colormap;
+    Visual* visual = get_argb_visual(display, screen, &colormap);
+    if (!visual) {
+        std::cerr << "No ARGB visual found\n" << std::endl;
+        exit(1);
+    }
+
+    windowWidth = width;
+    windowHeight = height;
+
+    // Window attributes
+    XSetWindowAttributes attrs;
+    attrs.override_redirect = true;
+    attrs.colormap = colormap;
+    attrs.background_pixel = 0x000000EE;  // Fully transparent
+    attrs.border_pixel = 0;
+    attrs.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask;
+
+    window = XCreateWindow(
+        display, RootWindow(display, screen), 
+        0, 0, width, height, 
+        0, //border
+        32, //depth
+        InputOutput,
+        visual,
+        CWOverrideRedirect | CWColormap | CWBackPixel | CWBorderPixel | CWEventMask,
+        &attrs
+    );
+
+    //XStoreName(display, window, title.c_str());
 
     // Select input events (close window, key press, etc.)
-    XSelectInput(display, window, ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask);
-    gc = XCreateGC(display, window, 0, NULL);
+    XSelectInput(display, window, attrs.event_mask);
+    gc = XCreateGC(display, window, 0, nullptr);
 
     // Display the window
     XMapWindow(display, window);
+
+    // Let window stay on top
+    XRaiseWindow(display, window);
+
+    // Enable input shape extension
+    int shape_event_base, shape_error_base;
+    if (!XShapeQueryExtension(display, &shape_event_base, &shape_error_base)) {
+        exit(1);
+    }
+
+    XFlush(display);
 }
 
 MyWindow::~MyWindow() {
@@ -41,43 +95,69 @@ void MyWindow::run() {
     XEvent event;
     while(true) {
         XNextEvent(display, &event);
-        if(event.type == KeyPress) {
+        switch (event.type)
+        {
+        case KeyPress:
             if(focus_on) {
                 if(keyFuncs[event.xkey.keycode] != nullptr) {
                     keyFuncs[event.xkey.keycode](true);
                 }
             }
-        } else if(event.type == KeyRelease) {
+            break;
+        case KeyRelease:
             if(focus_on) {
                 if(keyFuncs[event.xkey.keycode] != nullptr) {
                     keyFuncs[event.xkey.keycode](false);
                 }
             }
-        } else if(event.type == ButtonPress) {
+            break;
+
+        case ButtonPress:
             if(focus_on) {
                 if(buttonFuncs[event.xbutton.button] != nullptr) {
                     buttonFuncs[event.xbutton.button](true);
                 }
             }
-        } else if(event.type == ButtonRelease) {
+            break;
+        
+        case ButtonRelease:
             if(focus_on) {
                 if(buttonFuncs[event.xbutton.button] != nullptr) {
                     buttonFuncs[event.xbutton.button](false);
                 }
             }
-        } else if(event.type == MotionNotify) {
+            break;
+        
+        case MotionNotify:
+            std::cout << "Mouse Motion" << std::endl;
             if(focus_on) {
                 x_mouse_position = event.xmotion.x;
                 y_mouse_position = event.xmotion.y;
             }
-        } else if(event.type == FocusIn) {
+        
+        case FocusIn:
+            std::cout << "Focus" << std::endl;
             focus_on = true;
-        } else if(event.type == FocusOut) {
+            break;
+        case FocusOut:
             focus_on = false;
-        } else if (event.type == DestroyNotify) {
+            break;
+
+        default:
             break;
         }
     }
+}
+
+void MyWindow::enableInput(bool enable) {
+    XRectangle rect = {0, 0, (unsigned short)windowWidth, (unsigned short)windowHeight};
+
+    if(enable) {
+        XShapeCombineRectangles(display, window, ShapeInput, 0, 0, &rect, 1, ShapeSet, 0);
+    } else {
+        XShapeCombineRectangles(display, window, ShapeInput, 0, 0, nullptr, 0, ShapeSet, 0);
+    }
+
 }
 
 void MyWindow::changeInputHandle(long inputMask) {

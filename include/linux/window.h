@@ -10,6 +10,8 @@ class MyWindow {
 private:
     int x_mouse_position = 0;
     int y_mouse_position = 0;
+    int windowWidth = 0;
+    int windowHeight = 0;
     bool focus_on = false;
     Display *display;
     Window window;
@@ -33,6 +35,8 @@ public:
     void changeColor();
     void changeWindowSize(int width, int height);
 
+    void enableInput(bool enable);
+
     void addCallToKey(int keycode, void (*func)(bool));
     void removeCallFromKey(int keycode, void (*func)(bool));
 
@@ -43,6 +47,7 @@ public:
     bool getIsFocus();
 
 private:
+    Visual* get_argb_visual(Display* dpy, int screen, Colormap* out_colormap);
     
 };
 
