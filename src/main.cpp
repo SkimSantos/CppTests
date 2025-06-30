@@ -1,5 +1,12 @@
 #include <iostream>
 
+#ifdef __linux__
+
+#include "linux/window.h"
+#include "linux/image.h"
+
+MyWindow* currentWindow;
+
 void testFunction(bool pressed) {
     std::cout << "Key test Function Pressed Test " << pressed << std::endl; 
 }
@@ -8,17 +15,33 @@ void testButtonFunction(bool pressed) {
     std::cout << "Button Key Test " << pressed << std::endl;
 }
 
-#ifdef __linux__
+void onExitPress() {
+    std::cout << "On Exit" << std::endl;
+    if(currentWindow != nullptr) {
+        currentWindow->removeCallFromKey(38, testFunction);
+        currentWindow->removeCallFromButton(1, testButtonFunction);
+    }
+    exit(1);
+}
 
-#include "linux/window.h"
+void onWindowExpose() {
+    if(currentWindow != nullptr) {
+        XRectangle rect;
+        rect.x = 100;
+        rect.y = 20;
+        rect.width = 50;
+        rect.height = 50;
+        currentWindow->setInputButton( currentWindow->createButton(rect, "warning.png", onExitPress));
+
+        currentWindow->addCallToKey(38 , testFunction);
+        currentWindow->addCallToButton(1, testButtonFunction);
+    }
+}
+
 int main() {
-    MyWindow window(1000, 600, "Testing Window");
-    window.addCallToKey(38 , testFunction);
-    window.addCallToButton(1, testButtonFunction);
-    window.enableInput(true);
+    MyWindow window("Testing Window", onWindowExpose);
+    currentWindow = &window;
     window.run();
-    window.removeCallFromKey(38, testFunction);
-    window.removeCallFromButton(1, testButtonFunction);
     return 0;
 }
 
