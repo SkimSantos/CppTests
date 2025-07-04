@@ -19,7 +19,10 @@ if (X11_FOUND)
         ${X11_INCLUDE_DIR}
     )
     add_executable(test ${SOURCES})
-    target_link_libraries(test ${X11_LIBRARIES})
+    target_link_libraries(test 
+        ${X11_LIBRARIES}
+        Xrender
+    )
 else()
     message(FATAL_ERROR "X11 not found")
 endif()

@@ -27,11 +27,11 @@ void onExitPress() {
 void onWindowExpose() {
     if(currentWindow != nullptr) {
         XRectangle rect;
-        rect.x = 100;
-        rect.y = 20;
-        rect.width = 50;
-        rect.height = 50;
-        currentWindow->setInputButton( currentWindow->createButton(rect, "warning.png", onExitPress));
+        rect.x = currentWindow->getScreenWidth() - 100;
+        rect.y = currentWindow->getScreenHeight() - 100;
+        rect.width = 100;
+        rect.height = 100;
+        currentWindow->setInputButton( currentWindow->createButton(rect, "app_launcher.png", onExitPress));
 
         currentWindow->addCallToKey(38 , testFunction);
         currentWindow->addCallToButton(1, testButtonFunction);

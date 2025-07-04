@@ -25,6 +25,7 @@ private:
     Display *display;
     Window window;
     GC gc;  // Graphics context
+    Pixmap pixmap;
     int screen;
 
     bool inputActive = true;
@@ -64,6 +65,9 @@ public:
 
     std::vector<int> getMousePosition();
     bool getIsFocus();
+
+    int getScreenWidth();
+    int getScreenHeight();
 
 private:
     Visual* get_argb_visual(Display* dpy, int screen, Colormap* out_colormap);

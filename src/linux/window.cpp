@@ -2,6 +2,7 @@
 #include "linux/image.h"
 #include <X11/Xatom.h>
 #include <X11/extensions/shape.h>
+#include <X11/extensions/Xrender.h>
 #include <X11/Xresource.h>
 #include <iostream>
 
@@ -64,7 +65,10 @@ MyWindow::MyWindow(const std::string& title, void (*callback)()){
     XRaiseWindow(display, window);
     XFlush(display);
     
-    gc = XCreateGC(display, window, 0, nullptr);
+    pixmap = XCreatePixmap(display, window, windowWidth, windowHeight, 32);
+    gc = XCreateGC(display, pixmap, 0, nullptr);
+
+
     XSetInputFocus(display, screen, RevertToPointerRoot, CurrentTime);
     
     // Enable input shape extension
@@ -264,8 +268,18 @@ MyWindow::Button *MyWindow::createButton(XRectangle rect, const std::string& fil
 
     buttons.push_back(tempButton);
 
-    XPutImage(display, window, gc, tempButton.ximage, 0, 0, tempButton.x, tempButton.y,
+    XPutImage(display, pixmap, gc, tempButton.ximage, 0, 0, tempButton.x, tempButton.y,
         tempButton.width, tempButton.height);
+    
+    XRenderPictFormat *pictFormat = XRenderFindStandardFormat(display, PictStandardARGB32);
+    
+    Picture picture = XRenderCreatePicture(display, pixmap, pictFormat, 0, nullptr);
+    Picture win_picture = XRenderCreatePicture(display, window, pictFormat, 0, nullptr);
+    XRenderComposite(display, PictOpOver, picture, None, win_picture,
+                 tempButton.x, tempButton.y, 
+                 0, 0, 
+                 tempButton.x, tempButton.y, 
+                 tempButton.width, tempButton.height);
     
     return &buttons.back();
 }
@@ -280,4 +294,18 @@ std::vector<int> MyWindow::getMousePosition() {
 
 bool MyWindow::getIsFocus() {
     return focus_on;
+}
+
+int MyWindow::getScreenWidth() {
+    if(window) {
+        return DisplayWidth(display, 0);
+    }
+    return 0;
+}
+
+int MyWindow::getScreenHeight() {
+    if(window) {
+        return DisplayHeight(display, 0);
+    }
+    return 0;
 }

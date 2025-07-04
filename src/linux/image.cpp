@@ -47,14 +47,14 @@ unsigned char* Image::getImageData(const std::string &filepath) {
 
 unsigned char* Image::getScaleImagedata(const std::string &filepath, int new_width, int new_height) {
     int orig_width, orig_height, channels;
-    unsigned char* input = stbi_load(filepath.c_str(), &orig_width, &orig_height, &channels, 4); // force RGBA
+    unsigned char* input = stbi_load(filepath.c_str(), &orig_width, &orig_height, &channels, STBIR_RGBA); // force RGBA
     if (!input) {
         std::cerr << "Error: Failed to load image " << filepath << std::endl;
         return nullptr;
     }
 
     // Create output buffer
-    unsigned char* output = new unsigned char[new_width * new_height * 4];
+    unsigned char* output = new unsigned char[new_width * new_height * STBIR_RGBA];
 
     // Resize
     unsigned char* result = stbir_resize_uint8_linear(

@@ -1,5 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -Iinclude -std=c++17
+LIBS = -lX11 -lXext -lXrender
 
 SRC = $(wildcard src/*.cpp)
 OBJ := $(patsubst src/%.cpp, build/%.o, $(SRC))
@@ -12,11 +13,11 @@ $(shell mkdir -p build)
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 # Ensure object files are compiled correctly
 build/%.o: src/%.cpp | build
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $(LIBS)
 
 # Create the build directory if missing
 build:
